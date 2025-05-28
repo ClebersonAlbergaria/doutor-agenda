@@ -1,5 +1,6 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { error } from "console";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -102,7 +103,7 @@ const LoginForm = () => {
           </CardContent>
           <CardFooter>
             <Button className="w-full" type="submit">
-              Criar conta
+              Entrar
             </Button>
           </CardFooter>
         </form>

@@ -1,3 +1,4 @@
+"use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -61,7 +62,6 @@ const SignUpForm = () => {
           router.push("/dashboard");
         },
         onError: (ctx) => {
-          console.log(ctx);
           if (ctx.error.code === "USER_ALREADY_EXISTS") {
             toast.error("Email já cadastrado");
           }
