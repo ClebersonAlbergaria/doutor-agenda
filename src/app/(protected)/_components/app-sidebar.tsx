@@ -3,10 +3,9 @@
 import { Calendar, Home, Inbox, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,6 +53,7 @@ const items = [
 export function AppSidebar() {
   const router = useRouter();
   const session = authClient.useSession();
+  const pathname = usePathname();
 
   const handleSingOut = async () => {
     await authClient.signOut({
@@ -76,7 +76,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -99,7 +99,7 @@ export function AppSidebar() {
                   </Avatar>
                   <div>
                     <p>{session.data?.user.email}</p>
-                    <p>{session.data?.user.clinic.name}</p>
+                    <p>{session.data?.user?.clinic?.name}</p>
                   </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
