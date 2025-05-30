@@ -1,7 +1,9 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
+import { toast } from "sonner";
 import z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -9,7 +11,6 @@ import { DialogContent, DialogFooter } from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Select } from "@/components/ui/select";
 
+import { upsertDoctor } from "../../../../actions/upsert-doctor";
 import { medicalSpecialties } from "../_constants";
 
 const formSchema = z
@@ -68,8 +70,23 @@ const UpsertDoctorForm = () => {
     },
   });
 
+  const upsertDoctorAction = useAction(upsertDoctor, {
+    onSuccess: () => {
+      toast.success("Médico adicionado com sucesso.");
+    },
+    onError: () => {
+      toast.error("Erro ao adicionar médico.");
+    },
+  });
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    upsertDoctorAction.execute({
+      ...values,
+
+      appointmentPriceInCents: values.appointmentPrice * 100,
+      availableFromWeekDay: parseInt(values.availableFromWeekDay),
+      availableToWeekDay: parseInt(values.availableToWeekDay),
+    });
   };
 
   return (
@@ -129,15 +146,14 @@ const UpsertDoctorForm = () => {
                   onValueChange={(value) => {
                     field.onChange(value.floatValue);
                   }}
-                  thousandSeparator="."
-                  decimalSeparator=","
                   decimalScale={2}
                   fixedDecimalScale
+                  decimalSeparator=","
                   allowNegative={false}
                   allowLeadingZeros={false}
+                  thousandSeparator="."
                   customInput={Input}
                   prefix="R$"
-                  className="w-full"
                 />
 
                 <FormMessage />
@@ -342,7 +358,9 @@ const UpsertDoctorForm = () => {
             )}
           />
           <DialogFooter>
-            <Button type="submit">Adicionar</Button>
+            <Button type="submit" disabled={upsertDoctorAction.isPending}>
+              {upsertDoctorAction.isPending ? "Adicionando..." : "Adicionar"}
+            </Button>
           </DialogFooter>
         </form>
       </Form>

@@ -121,7 +121,7 @@ export const doctorsTable = pgTable("doctors", {
 
   //1-Sunday, 2-Monday, 3-Tuesday, 4-Wednesday, 5-Thursday, 6-Friday, 0-Saturday
   availableFromWeekdays: integer("available_from_weekdays").notNull(),
-  availabletoWeekdays: integer("available_from_weekdays").notNull(),
+  availabletoWeekdays: integer("available_to_weekdays").notNull(),
 
   availableFromTime: time("available_from_time").notNull(),
   availableToTime: time("available_to_time").notNull(),
@@ -133,7 +133,7 @@ export const doctorsTable = pgTable("doctors", {
 
 export const doctorTableRelations = relations(
   doctorsTable,
-  ({ one, many }) => ({
+  ({ many, one }) => ({
     clinic: one(clinicsTable, {
       fields: [doctorsTable.clinicId],
       references: [clinicsTable.id],
