@@ -56,7 +56,11 @@ const formSchema = z
       "O horário final de disponibilidade não pode ser anterior ao horário inicial.",
   });
 
-const UpsertDoctorForm = () => {
+interface UpsertDoctorFormProps {
+  onSuccess?: () => void;
+}
+
+const UpsertDoctorForm = ({ onSuccess }: UpsertDoctorFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -83,6 +87,7 @@ const UpsertDoctorForm = () => {
   const upsertDoctorAction = useAction(upsertDoctor, {
     onSuccess: () => {
       toast.success("Médico adicionado com sucesso.");
+      onSuccess?.();
     },
     onError: () => {
       toast.error("Erro ao adicionar médico.");
