@@ -70,15 +70,6 @@ const UpsertDoctorForm = () => {
     },
   });
 
-  const upsertDoctorAction = useAction(upsertDoctor, {
-    onSuccess: () => {
-      toast.success("Médico adicionado com sucesso.");
-    },
-    onError: () => {
-      toast.error("Erro ao adicionar médico.");
-    },
-  });
-
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     upsertDoctorAction.execute({
       ...values,
@@ -88,6 +79,15 @@ const UpsertDoctorForm = () => {
       availableToWeekDay: parseInt(values.availableToWeekDay),
     });
   };
+
+  const upsertDoctorAction = useAction(upsertDoctor, {
+    onSuccess: () => {
+      toast.success("Médico adicionado com sucesso.");
+    },
+    onError: () => {
+      toast.error("Erro ao adicionar médico.");
+    },
+  });
 
   return (
     <DialogContent>

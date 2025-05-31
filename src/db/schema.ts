@@ -110,21 +110,19 @@ export const clinicTableRelations = relations(clinicsTable, ({ many }) => ({
 }));
 
 export const doctorsTable = pgTable("doctors", {
-  id: uuid("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   clinicId: uuid("clinic_id")
     .notNull()
     .references(() => clinicsTable.id, { onDelete: "cascade" }),
-  name: varchar("name").notNull(),
+  name: text("name").notNull(),
   avatarImageUrl: text("avatar_image_url"),
-  speciality: text("speciality").notNull(),
-  appointmentPriceInCents: integer("appointment_price_in_cents").notNull(),
-
-  //1-Sunday, 2-Monday, 3-Tuesday, 4-Wednesday, 5-Thursday, 6-Friday, 0-Saturday
-  availableFromWeekdays: integer("available_from_weekdays").notNull(),
-  availabletoWeekdays: integer("available_to_weekdays").notNull(),
-
+  // 1 - Monday, 2 - Tuesday, 3 - Wednesday, 4 - Thursday, 5 - Friday, 6 - Saturday, 0 - Sunday
+  availableFromWeekDay: integer("available_from_week_day").notNull(),
+  availableToWeekDay: integer("available_to_week_day").notNull(),
   availableFromTime: time("available_from_time").notNull(),
   availableToTime: time("available_to_time").notNull(),
+  specialty: text("specialty").notNull(),
+  appointmentPriceInCents: integer("appointment_price_in_cents").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

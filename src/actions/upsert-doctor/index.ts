@@ -14,6 +14,7 @@ export const upsertDoctor = actionClient
     const session = await auth.api.getSession({
       headers: await headers(),
     });
+
     if (!session?.user) {
       throw new Error("Unauthorized");
     }
