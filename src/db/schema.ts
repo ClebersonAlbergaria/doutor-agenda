@@ -140,24 +140,24 @@ export const doctorTableRelations = relations(
   }),
 );
 
-export const patientesSexEnum = pgEnum("patientes_sex", ["male", "female"]);
+export const patientSexEnum = pgEnum("patient_sex", ["male", "female"]);
 
 export const patientsTable = pgTable("patients", {
-  id: uuid("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   clinicId: uuid("clinic_id")
     .notNull()
     .references(() => clinicsTable.id, { onDelete: "cascade" }),
-  name: varchar("name").notNull(),
-  email: varchar("email").notNull().unique(),
-  phoneNumber: varchar("phone_number").notNull(),
-  sex: patientesSexEnum("sex").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phoneNumber: text("phone_number").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  sex: patientSexEnum("sex").notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
 
-export const patientTableRelations = relations(
+export const patientsTableRelations = relations(
   patientsTable,
   ({ one, many }) => ({
     clinic: one(clinicsTable, {
