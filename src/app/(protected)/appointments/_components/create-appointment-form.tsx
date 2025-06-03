@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { toast } from "sonner";
@@ -37,17 +37,20 @@ import { doctorsTable, patientsTable } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
 const createAppointmentSchema = z.object({
-  patientId: z.string().uuid({
-    message: "Selecione um paciente",
+  patientId: z.string().min(1, {
+    message: "Paciente é obrigatório.",
   }),
-  doctorId: z.string().uuid({
-    message: "Selecione um médico",
+  doctorId: z.string().min(1, {
+    message: "Médico é obrigatório.",
+  }),
+  appointmentPrice: z.number().min(1, {
+    message: "Valor da consulta é obrigatório.",
   }),
   date: z.date({
-    required_error: "Selecione uma data",
+    message: "Data é obrigatória.",
   }),
-  appointmentPriceInCents: z.number({
-    required_error: "Informe o valor da consulta",
+  time: z.string().min(1, {
+    message: "Horário é obrigatório.",
   }),
 });
 
@@ -74,6 +77,7 @@ export function CreateAppointmentForm({
 
   const { watch, setValue } = form;
   const doctorId = watch("doctorId");
+  const selectedDate = watch("date");
 
   const createAppointmentAction = useAction(createAppointment, {
     onSuccess: () => {
@@ -90,15 +94,56 @@ export function CreateAppointmentForm({
       const doctor = doctors.find((d) => d.id === doctorId);
       setSelectedDoctor(doctor ?? null);
       if (doctor) {
-        setValue("appointmentPriceInCents", doctor.appointmentPriceInCents);
+        setValue("appointmentPrice", doctor.appointmentPriceInCents);
       }
     } else {
       setSelectedDoctor(null);
     }
   }, [doctorId, doctors, setValue]);
 
+  // Reset time when doctor or date changes
+  useEffect(() => {
+    setValue("time", "");
+  }, [doctorId, selectedDate, setValue]);
+
+  const availableTimeSlots = useMemo(() => {
+    if (!selectedDoctor) return [];
+
+    const fromTime = selectedDoctor.availableFromTime;
+    const toTime = selectedDoctor.availableToTime;
+
+    const [fromHour, fromMinute] = fromTime.split(":").map(Number);
+    const [toHour, toMinute] = toTime.split(":").map(Number);
+
+    const slots: string[] = [];
+    let currentHour = fromHour;
+    let currentMinute = fromMinute;
+
+    while (
+      currentHour < toHour ||
+      (currentHour === toHour && currentMinute <= toMinute)
+    ) {
+      slots.push(
+        `${currentHour.toString().padStart(2, "0")}:${currentMinute
+          .toString()
+          .padStart(2, "0")}`,
+      );
+
+      currentMinute += 30;
+      if (currentMinute >= 60) {
+        currentHour += 1;
+        currentMinute = 0;
+      }
+    }
+
+    return slots;
+  }, [selectedDoctor]);
+
   function onSubmit(data: CreateAppointmentFormValues) {
-    createAppointmentAction.execute(data);
+    createAppointmentAction.execute({
+      ...data,
+      appointmentPriceInCents: data.appointmentPrice * 100,
+    });
   }
 
   return (
@@ -156,7 +201,7 @@ export function CreateAppointmentForm({
 
         <FormField
           control={form.control}
-          name="appointmentPriceInCents"
+          name="appointmentPrice"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Valor da consulta</FormLabel>
@@ -197,11 +242,11 @@ export function CreateAppointmentForm({
                         "w-[280px] justify-start text-left font-normal",
                         !field.value && "text-muted-foreground",
                       )}
-                      disabled={!selectedDoctor || !form.getValues("patientId")}
+                      disabled={!selectedDoctor}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {field.value ? (
-                        format(field.value, "PPP")
+                        format(field.value, "PPP", { locale: ptBR })
                       ) : (
                         <span>Selecione uma data</span>
                       )}
@@ -226,6 +271,43 @@ export function CreateAppointmentForm({
                   />
                 </PopoverContent>
               </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="time"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Horário</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={!selectedDoctor || !selectedDate}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        !selectedDoctor
+                          ? "Selecione um médico primeiro"
+                          : !selectedDate
+                            ? "Selecione uma data primeiro"
+                            : "Selecione um horário"
+                      }
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {availableTimeSlots.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

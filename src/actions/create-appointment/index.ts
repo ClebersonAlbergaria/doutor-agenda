@@ -11,10 +11,21 @@ import { auth } from "@/lib/auth";
 import { actionClient } from "@/lib/next-safe-action";
 
 const schema = z.object({
-  patientId: z.string().uuid(),
-  doctorId: z.string().uuid(),
-  date: z.date(),
-  appointmentPriceInCents: z.number(),
+  patientId: z.string().uuid({
+    message: "Paciente é obrigatório.",
+  }),
+  doctorId: z.string().uuid({
+    message: "Médico é obrigatório.",
+  }),
+  date: z.date({
+    message: "Data é obrigatória.",
+  }),
+  time: z.string().min(1, {
+    message: "Horário é obrigatório.",
+  }),
+  appointmentPriceInCents: z.number().min(1, {
+    message: "Valor da consulta é obrigatório.",
+  }),
 });
 
 export const createAppointment = actionClient
@@ -31,16 +42,17 @@ export const createAppointment = actionClient
     if (!session?.user.clinic?.id) {
       throw new Error("Clinic not found");
     }
+    const appointmentDateTime = dayjs(parsedInput.date)
+      .set("hour", parseInt(parsedInput.time.split(":")[0]))
+      .set("minute", parseInt(parsedInput.time.split(":")[1]))
+      .toDate();
 
     const [appointment] = await db
       .insert(appointmentsTable)
       .values({
-        id: crypto.randomUUID(),
-        patientId: parsedInput.patientId,
-        doctorId: parsedInput.doctorId,
-        date: dayjs(parsedInput.date).format("YYYY-MM-DD"),
-        appointmentPriceInCents: parsedInput.appointmentPriceInCents,
-        clinicId: session.user.clinic.id,
+        ...parsedInput,
+        clinicId: session?.user.clinic?.id,
+        date: appointmentDateTime,
       })
       .returning();
 

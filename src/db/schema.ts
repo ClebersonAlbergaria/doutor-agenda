@@ -1,7 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
-  date,
   integer,
   pgEnum,
   pgTable,
@@ -169,18 +168,18 @@ export const patientsTableRelations = relations(
 );
 
 export const appointmentsTable = pgTable("appointments", {
-  id: uuid("id").primaryKey(),
-  date: date("date").notNull(),
+  id: uuid("id").defaultRandom().primaryKey(),
+  date: timestamp("date").notNull(),
   appointmentPriceInCents: integer("appointment_price_in_cents").notNull(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
   patientId: uuid("patient_id")
     .notNull()
     .references(() => patientsTable.id, { onDelete: "cascade" }),
   doctorId: uuid("doctor_id")
     .notNull()
     .references(() => doctorsTable.id, { onDelete: "cascade" }),
-  clinicId: uuid("clinic_id")
-    .notNull()
-    .references(() => clinicsTable.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -190,6 +189,10 @@ export const appointmentsTable = pgTable("appointments", {
 export const appointmentTableRelations = relations(
   appointmentsTable,
   ({ one }) => ({
+    clinic: one(clinicsTable, {
+      fields: [appointmentsTable.clinicId],
+      references: [clinicsTable.id],
+    }),
     patient: one(patientsTable, {
       fields: [appointmentsTable.patientId],
       references: [patientsTable.id],
@@ -197,10 +200,6 @@ export const appointmentTableRelations = relations(
     doctor: one(doctorsTable, {
       fields: [appointmentsTable.doctorId],
       references: [doctorsTable.id],
-    }),
-    clinic: one(clinicsTable, {
-      fields: [appointmentsTable.clinicId],
-      references: [clinicsTable.id],
     }),
   }),
 );
