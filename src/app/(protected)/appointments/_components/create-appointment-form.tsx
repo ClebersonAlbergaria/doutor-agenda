@@ -5,7 +5,7 @@ import { ptBR } from "date-fns/locale";
 import dayjs from "dayjs";
 import { CalendarIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { toast } from "sonner";
@@ -76,6 +76,13 @@ export function CreateAppointmentForm({
 
   const form = useForm<CreateAppointmentFormValues>({
     resolver: zodResolver(createAppointmentSchema),
+    defaultValues: {
+      patientId: "",
+      doctorId: "",
+      appointmentPrice: 0,
+      date: undefined,
+      time: "",
+    },
   });
 
   const { watch, setValue } = form;
@@ -117,39 +124,6 @@ export function CreateAppointmentForm({
   useEffect(() => {
     setValue("time", "");
   }, [doctorId, selectedDate, setValue]);
-
-  const availableTimeSlots = useMemo(() => {
-    if (!selectedDoctor) return [];
-
-    const fromTime = selectedDoctor.availableFromTime;
-    const toTime = selectedDoctor.availableToTime;
-
-    const [fromHour, fromMinute] = fromTime.split(":").map(Number);
-    const [toHour, toMinute] = toTime.split(":").map(Number);
-
-    const slots: string[] = [];
-    let currentHour = fromHour;
-    let currentMinute = fromMinute;
-
-    while (
-      currentHour < toHour ||
-      (currentHour === toHour && currentMinute <= toMinute)
-    ) {
-      slots.push(
-        `${currentHour.toString().padStart(2, "0")}:${currentMinute
-          .toString()
-          .padStart(2, "0")}`,
-      );
-
-      currentMinute += 30;
-      if (currentMinute >= 60) {
-        currentHour += 1;
-        currentMinute = 0;
-      }
-    }
-
-    return slots;
-  }, [selectedDoctor]);
 
   function onSubmit(data: CreateAppointmentFormValues) {
     createAppointmentAction.execute({
@@ -318,8 +292,12 @@ export function CreateAppointmentForm({
                 </FormControl>
                 <SelectContent>
                   {availableTimes?.data?.map((time) => (
-                    <SelectItem key={time.value} value={time.value}>
-                      {time.label}
+                    <SelectItem
+                      key={time.value}
+                      value={time.value}
+                      disabled={!time.available}
+                    >
+                      {time.label} {!time.available && "(Indisponível)"}
                     </SelectItem>
                   ))}
                 </SelectContent>

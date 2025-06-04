@@ -42,11 +42,11 @@ export const appointmentsTableColumns: ColumnDef<Appointment>[] = [
     accessorKey: "appointmentPriceInCents",
     header: "Valor",
     cell: (params) => {
-      const price = params.row.original.appointmentPriceInCents;
+      const price = params.row.original.appointmentPriceInCents / 100;
       return new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
-      }).format(price / 100);
+      }).format(price);
     },
   },
   {
