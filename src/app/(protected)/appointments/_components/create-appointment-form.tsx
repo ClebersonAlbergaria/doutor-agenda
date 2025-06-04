@@ -1,6 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import dayjs from "dayjs";
 import { CalendarIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useMemo, useState } from "react";
@@ -10,6 +12,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { createAppointment } from "@/actions/create-appointment";
+import { getAvailableTimes } from "@/actions/get-available-times";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -79,6 +82,15 @@ export function CreateAppointmentForm({
   const doctorId = watch("doctorId");
   const selectedDate = watch("date");
 
+  const { data: availableTimes } = useQuery({
+    queryKey: ["available-times", doctorId, selectedDate],
+    queryFn: () =>
+      getAvailableTimes({
+        doctorId: doctorId,
+        date: dayjs(selectedDate).format("YYYY-MM-DD"),
+      }),
+  });
+
   const createAppointmentAction = useAction(createAppointment, {
     onSuccess: () => {
       toast.success("Agendamento criado com sucesso");
@@ -146,6 +158,17 @@ export function CreateAppointmentForm({
     });
   }
 
+  const isDateAvailable = (date: Date) => {
+    if (!doctorId) return false;
+    const selectedDoctor = doctors.find((doctor) => doctor.id === doctorId);
+    if (!selectedDoctor) return false;
+    const dayOfWeek = date.getDay();
+    return (
+      dayOfWeek >= selectedDoctor?.availableFromWeekDay &&
+      dayOfWeek <= selectedDoctor?.availableToWeekDay
+    );
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -207,19 +230,18 @@ export function CreateAppointmentForm({
               <FormLabel>Valor da consulta</FormLabel>
               <FormControl>
                 <NumericFormat
-                  customInput={Input}
-                  value={field.value ? field.value / 100 : ""}
-                  onValueChange={(values) => {
-                    field.onChange(
-                      values.floatValue ? values.floatValue * 100 : 0,
-                    );
+                  value={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value.floatValue);
                   }}
-                  disabled={!selectedDoctor}
-                  prefix="R$ "
                   decimalScale={2}
                   fixedDecimalScale
                   decimalSeparator=","
                   thousandSeparator="."
+                  prefix="R$ "
+                  allowNegative={false}
+                  disabled={!selectedDoctor}
+                  customInput={Input}
                 />
               </FormControl>
               <FormMessage />
@@ -258,16 +280,10 @@ export function CreateAppointmentForm({
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
-                    disabled={(date) => {
-                      if (!selectedDoctor) return true;
-                      const day = date.getDay();
-                      return (
-                        day < selectedDoctor.availableFromWeekDay ||
-                        day > selectedDoctor.availableToWeekDay
-                      );
-                    }}
+                    disabled={(date) =>
+                      date < new Date() || !isDateAvailable(date)
+                    }
                     initialFocus
-                    locale={ptBR}
                   />
                 </PopoverContent>
               </Popover>
@@ -301,9 +317,9 @@ export function CreateAppointmentForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {availableTimeSlots.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
+                  {availableTimes?.data?.map((time) => (
+                    <SelectItem key={time.value} value={time.value}>
+                      {time.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

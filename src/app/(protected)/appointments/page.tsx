@@ -15,7 +15,7 @@ import {
   PageTitle,
 } from "@/components/ui/page-conteiner";
 import { db } from "@/db";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { appointmentsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 import { CreateAppointmentDialog } from "./_components/create-appointment-dialog";
