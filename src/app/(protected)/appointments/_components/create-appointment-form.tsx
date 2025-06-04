@@ -114,7 +114,7 @@ export function CreateAppointmentForm({
       const doctor = doctors.find((d) => d.id === doctorId);
       setSelectedDoctor(doctor ?? null);
       if (doctor) {
-        setValue("appointmentPrice", doctor.appointmentPriceInCents);
+        setValue("appointmentPrice", doctor.appointmentPriceInCents / 100);
       }
     } else {
       setSelectedDoctor(null);
