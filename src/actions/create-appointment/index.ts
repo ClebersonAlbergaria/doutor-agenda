@@ -77,5 +77,6 @@ export const createAppointment = actionClient
       .returning();
 
     revalidatePath("/appointments");
+    revalidatePath("/dashboard");
     return appointment;
   });
