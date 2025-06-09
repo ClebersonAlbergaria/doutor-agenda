@@ -20,13 +20,17 @@ export const auth = betterAuth({
         where: eq(usersToClinicsTable.userId, user.id),
         with: {
           clinic: true,
+          user: true,
         },
       });
+
+      //TODO: Verificar se o usuário tem mais de uma clínica e retornar a clínica ativa. devese mudar esse codigo.
       const clinic = clinics?.[0];
       return {
         ...session,
         user: {
           ...user,
+          plan: clinic?.user.plan,
           clinic: {
             id: clinic.clinicId,
             name: clinic.clinic.name,
@@ -38,6 +42,23 @@ export const auth = betterAuth({
   //... the rest of your config
   user: {
     modelName: "usersTable",
+    additionalFields: {
+      stripeCustomerId: {
+        type: "string",
+        fieldName: "stripeCustomerId",
+        required: false,
+      },
+      stripeSubscriptionId: {
+        type: "string",
+        fieldName: "stripeSubscriptionId",
+        required: false,
+      },
+      plan: {
+        type: "string",
+        fieldName: "plan",
+        required: false,
+      },
+    },
   },
   session: {
     modelName: "sessionsTable",
