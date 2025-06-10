@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/page-conteiner";
 import { auth } from "@/lib/auth";
 
-import SubscriptionPlan from "./_components/subscription-plan";
+import SubscriptionPlan from "../(protected)/subscription/_components/subscription-plan";
 
 const SubscriptionPage = async () => {
   const session = await auth.api.getSession({
@@ -20,9 +20,6 @@ const SubscriptionPage = async () => {
   });
   if (!session) {
     redirect("/login");
-  }
-  if (!session.user.clinic) {
-    redirect("/clinic-form");
   }
 
   return (

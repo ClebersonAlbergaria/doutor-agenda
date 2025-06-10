@@ -19,10 +19,6 @@ export const createStripeCheckout = actionClient.action(async () => {
     throw new Error("Unauthorized");
   }
 
-  if (!session?.user.clinic) {
-    throw new Error("Clinic not found");
-  }
-
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("Stripe secret key not found");
   }
@@ -48,11 +44,11 @@ export const createStripeCheckout = actionClient.action(async () => {
         quantity: 1,
       },
     ],
-    customer_email: session.user.email,
-    client_reference_id: session.user.id,
-    metadata: {
-      clinicId: session.user.clinic.id,
-    },
+    // customer_email: session.user.email,
+    // client_reference_id: session.user.id,
+    // metadata: {
+    //   clinicId: session.user.clinic.id,
+    // },
   });
   return {
     sessionId,
