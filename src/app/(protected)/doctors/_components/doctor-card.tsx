@@ -46,7 +46,6 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
   const deleteDoctorAction = useAction(deleteDoctor, {
     onSuccess: () => {
       toast.success("Médico excluído com sucesso.");
-      onSuccess?.();
     },
     onError: () => {
       toast.error("Erro ao excluir médico.");
